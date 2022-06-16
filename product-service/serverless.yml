@@ -26,6 +26,7 @@ provider:
   stage: dev
   region: eu-west-1
 
+
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
 #    role:
@@ -45,8 +46,12 @@ provider:
 #                - "/*"
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  environment:
+    PG_HOST: database-1.cf44pcutigl5.eu-west-1.rds.amazonaws.com
+    PG_PORT: 5432
+    PG_DATABASE: shop
+    PG_USERNAME: postgres
+    PG_PASSWORD: swOg9q5JEX4dQDTZ80vi
 
 # you can add packaging information here
 #package:
@@ -58,17 +63,45 @@ provider:
 
 functions:
   getProductsList :
-    handler: handler.getProductsList 
+    handler: getProductsList.getProductsList 
     events: 
       - http:
           path: products
           method: get
           cors: true
   getProductsById :
-    handler: handler.getProductsById 
+    handler: getProductsById.getProductsById 
     events: 
       - http:
           path: /products/{productId}
+          method: get
+          cors: true
+  createProductsDatabase:
+    handler: createProductsDatabase.createProductsDatabase 
+    events: 
+      - http:
+          path: createProductsDatabase
+          method: get
+          cors: true
+  fillProductsDatabase:
+    handler: fillProductsDatabase.fillProductsDatabase 
+    events: 
+      - http:
+          path: fillProductsDatabase
+          method: get
+          cors: true
+  createStocksDatabase:
+    handler: createStocksDatabase.createStocksDatabase 
+    events: 
+      - http:
+          path: createStocksDatabase
+          method: get
+          cors: true
+  fillStocksDatabase:
+    handler: fillStocksDatabase.fillStocksDatabase 
+    events: 
+      - http:
+          path: fillStocksDatabase
           method: get
           cors: true
 #    The following are a few example events you can configure
