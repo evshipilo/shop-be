@@ -6,8 +6,12 @@ const BUCKET = 'evshipilo-import';
 module.exports.importFileParser = async (event) => {
   console.log('START!!!');
   const s3 = new AWS.S3({ region: 'eu-west-1' });
+  const sqs = new AWS.SQS({ region: 'eu-west-1' });
 
   let status = 200;
+
+  let messageData = [];
+
   try {
     for (const record of event.Records) {
       console.log('RECORD!!!', record);
@@ -23,6 +27,7 @@ module.exports.importFileParser = async (event) => {
         s3Stream
           .pipe(csv())
           .on('data', (data) => {
+            messageData= [...messageData, data]
             console.log('DATA!!!!!!!!!!!!:', data);
           })
           .on('error', (error) => {
@@ -39,6 +44,17 @@ module.exports.importFileParser = async (event) => {
   } catch (error) {
     console.log('CATCH!!', error);
     status = 500;
+  }
+
+  for(const message of messageData){
+    let res = await sqs
+    .sendMessage({
+      QueueUrl:
+        'https://sqs.eu-west-1.amazonaws.com/883121371508/catalogItemsQueue',
+      MessageBody: JSON.stringify(message),
+    })
+    .promise();
+  console.log('SENDED!!!', res);
   }
 
   return {

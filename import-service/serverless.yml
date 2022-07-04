@@ -26,6 +26,10 @@ provider:
   stage: dev
   region: eu-west-1
 
+  environment:
+    SQS_URL:
+      Ref: SQSQueue
+
   iamRoleStatements:
     - Effect: "Allow"
       Action: 
@@ -37,6 +41,17 @@ provider:
             - "s3:*"
       Resource:
             - "arn:aws:s3:::evshipilo-import/*"
+    - Effect: "Allow"
+      Action: 
+            - "sqs:*"
+      Resource: "*"
+
+resources:
+  Resources:
+    SQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue
 
 functions:
   importProductsFile :

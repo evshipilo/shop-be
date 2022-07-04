@@ -26,6 +26,41 @@ provider:
   stage: dev
   region: eu-west-1
 
+  environment:
+    PG_HOST: database-1.cf44pcutigl5.eu-west-1.rds.amazonaws.com
+    PG_PORT: 5432
+    PG_DATABASE: shop
+    PG_USERNAME: postgres
+    PG_PASSWORD: swOg9q5JEX4dQDTZ80vi
+    SNS_ARN:
+      Ref: SNSTopic
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: 
+            - "sqs:*"
+      Resource:
+            - "arn:aws:sqs:eu-west-1:883121371508:catalogItemsQueue"
+    - Effect: "Allow"
+      Action: 
+            - "sns:*"
+      Resource: 
+        Ref: SNSTopic
+
+resources:
+  Resources:
+    SNSTopic: 
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: createProductTopic
+    SNSSubscription: 
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: evshipilo@gmail.com
+        Protocol: email
+        TopicArn:
+          Ref: SNSTopic
+
 
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
@@ -46,12 +81,14 @@ provider:
 #                - "/*"
 
 # you can define service wide environment variables here
-  environment:
-    PG_HOST: database-1.cf44pcutigl5.eu-west-1.rds.amazonaws.com
-    PG_PORT: 5432
-    PG_DATABASE: shop
-    PG_USERNAME: postgres
-    PG_PASSWORD: swOg9q5JEX4dQDTZ80vi
+  # environment:
+  #   PG_HOST: database-1.cf44pcutigl5.eu-west-1.rds.amazonaws.com
+  #   PG_PORT: 5432
+  #   PG_DATABASE: shop
+  #   PG_USERNAME: postgres
+  #   PG_PASSWORD: swOg9q5JEX4dQDTZ80vi
+  #   SNS_ARN:
+  #     Ref: SNSTopic
 
 # you can add packaging information here
 #package:
@@ -90,6 +127,13 @@ functions:
           path: fillProductsDatabase
           method: get
           cors: true
+  cleanDatabases:
+    handler: cleanDatabases.cleanDatabases 
+    events: 
+      - http:
+          path: cleanProductsDatabase
+          method: get
+          cors: true
   createStocksDatabase:
     handler: createStocksDatabase.createStocksDatabase 
     events: 
@@ -104,6 +148,14 @@ functions:
           path: fillStocksDatabase
           method: get
           cors: true
+  catalogBatchProcess:
+    handler: catalogBatchProcess.catalogBatchProcess 
+    events:
+      - sqs:
+          arn: arn:aws:sqs:eu-west-1:883121371508:catalogItemsQueue
+          batchSize: 5
+      
+
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
